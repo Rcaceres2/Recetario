@@ -65,3 +65,13 @@ function normalizarCategoria(c) {
     descripcion: c.strCategoryDescription,
   };
 }
+
+function normalizarOrigen(meal) {
+  if (!meal || !meal.strArea) return null;
+  return { id: meal.strArea, nombre: meal.strArea };
+}
+
+function normalizarIngrediente(meal) {
+  if (!meal || !meal.strIngredient) return null;
+  return { id: meal.strIngredient, nombre: meal.strIngredient };
+}

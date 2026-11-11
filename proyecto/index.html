@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Recetario</title>
+  <title> Cooking Mama</title>
   <link rel="stylesheet" href="./css/styles.css">
 </head>
 <body>
 
   <nav id="barra-nav" class="barra-nav" aria-label="Navegación principal">
-    <span class="barra-nav__logo">Recetario</span>
+    <span class="barra-nav__logo">Cooking Mama</span>
 
     <ul class="barra-nav__lista">
       <li>
@@ -31,6 +31,31 @@
 
   <main id="app-main"></main>
 
-  <script type="module" src="./js/app.js"></script>
+  <div id="app-mensaje" class="app-mensaje" role="status" aria-live="polite"></div>
+
+  <div id="app-dialogo" class="app-dialogo" role="dialog" aria-modal="true" hidden></div>
+
+  <script src="./js/servicios/api.js"></script>
+  <script src="./js/servicios/cache.js"></script>
+  <script src="./js/servicios/recetas.js"></script>
+  <script src="./js/servicios/comparacion.js"></script>
+
+  <script src="./js/componentes/EstadoCarga.js"></script>
+  <script src="./js/componentes/BarraNavegacion.js"></script>
+  <script src="./js/componentes/TarjetaReceta.js"></script>
+  <script src="./js/componentes/ListaIngredientes.js"></script>
+  <script src="./js/componentes/PasosPreparacion.js"></script>
+  <script src="./js/componentes/Paginador.js"></script>
+  <script src="./js/componentes/FormularioBusqueda.js"></script>
+  <script src="./js/componentes/PanelComparador.js"></script>
+  <script src="./js/componentes/TablaComparacion.js"></script>
+
+  <script src="./js/vistas/VistaInicio.js"></script>
+  <script src="./js/vistas/VistaExplorar.js"></script>
+  <script src="./js/vistas/VistaDetalle.js"></script>
+  <script src="./js/vistas/VistaCategoriasOrigenes.js"></script>
+  <script src="./js/vistas/VistaComparador.js"></script>
+
+  <script src="./js/app.js"></script>
 </body>
 </html>

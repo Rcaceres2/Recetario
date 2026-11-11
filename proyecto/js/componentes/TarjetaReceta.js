@@ -79,3 +79,49 @@ class TarjetaReceta {
 
         return tarjeta;
     }
+    configurarEventos() {
+        this.onDetalle = () => this.notificar('abrirDetalle', { id: this.receta?.id });
+        this.onComparar = () => this.notificar('agregarComparador', { id: this.receta?.id });
+        this.onReintentar = () => {
+            if (this.alReintentar) this.alReintentar();
+        };
+
+        if (this.botonDetalle) this.botonDetalle.addEventListener('click', this.onDetalle);
+        if (this.botonComparar) this.botonComparar.addEventListener('click', this.onComparar);
+        if (this.botonReintentar) this.botonReintentar.addEventListener('click', this.onReintentar);
+    }
+
+    notificar(nombre, detalle) {
+        this.contenedor.dispatchEvent(
+            new CustomEvent(nombre, { bubbles: true, detail: detalle })
+        );
+    }
+
+    renderizar() {
+        this.contenedor.textContent = '';
+        this.elemento = this.crearElemento();
+        this.contenedor.appendChild(this.elemento);
+        this.configurarEventos();
+    }
+
+    destruir() {
+        if (this.botonDetalle && this.onDetalle) {
+            this.botonDetalle.removeEventListener('click', this.onDetalle);
+        }
+        if (this.botonComparar && this.onComparar) {
+            this.botonComparar.removeEventListener('click', this.onComparar);
+        }
+        if (this.botonReintentar && this.onReintentar) {
+            this.botonReintentar.removeEventListener('click', this.onReintentar);
+        }
+        this.onDetalle = null;
+        this.onComparar = null;
+        this.onReintentar = null;
+
+        if (this.elemento) {
+            this.elemento.remove();
+            this.elemento = null;
+        }
+    }
+}
+

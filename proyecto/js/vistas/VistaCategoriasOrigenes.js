@@ -249,3 +249,158 @@ class VistaCategoriasOrigenes {
 
         this.contenedorContenido.appendChild(lista);
     }
+    pintarDetalle() {
+        const seleccion = this.estado.seleccion;
+
+        const btnVolver = document.createElement('button');
+        btnVolver.type = 'button';
+        btnVolver.className = 'btn-secundario';
+        btnVolver.textContent = '← Volver a la lista';
+        btnVolver.dataset.accion = 'volver';
+        this.contenedorContenido.appendChild(btnVolver);
+
+        if (seleccion.tipo === 'categoria') {
+            const imagen = document.createElement('img');
+            imagen.className = 'detalle-categoria__imagen';
+            imagen.src = seleccion.imagen;
+            imagen.alt = seleccion.nombre;
+            this.contenedorContenido.appendChild(imagen);
+
+            const nombre = document.createElement('h3');
+            nombre.textContent = seleccion.nombre;
+            this.contenedorContenido.appendChild(nombre);
+
+            const descripcion = document.createElement('p');
+            descripcion.className = 'detalle-categoria__descripcion';
+            descripcion.textContent = seleccion.descripcion || '';
+            this.contenedorContenido.appendChild(descripcion);
+        } else {
+            const nombre = document.createElement('h3');
+            nombre.textContent = seleccion.nombre;
+            this.contenedorContenido.appendChild(nombre);
+        }
+
+        this.contenedorRecetas = document.createElement('div');
+        this.contenedorRecetas.className = 'categorias__recetas';
+        this.contenedorContenido.appendChild(this.contenedorRecetas);
+
+        this.cargarRecetas(seleccion);
+    }
+
+    async cargarRecetas(seleccion) {
+        const token = ++this.peticionActual;
+
+        this.contenedorRecetas.textContent = '';
+
+        this.estadoCargaRecetas?.destruir();
+        this.estadoCargaRecetas = new EstadoCarga(this.contenedorRecetas, {
+            tipo: 'tarjetas',
+            mensaje: 'Cargando recetas...',
+            cantidadEsqueletos: 6,
+        });
+
+        let meals;
+        try {
+            const data = seleccion.tipo === 'categoria'
+                ? await api.filtrarPorCategoria(seleccion.nombre)
+                : await api.filtrarPorOrigen(seleccion.nombre);
+            meals = data?.meals || [];
+        } catch (error) {
+            if (this.destruido || token !== this.peticionActual) return;
+            this.contenedorRecetas.textContent = '';
+            this.estadoCargaRecetas?.destruir();
+            this.estadoCargaRecetas = new EstadoCarga(this.contenedorRecetas, {
+                tipo: 'tarjetas',
+                estado: 'error',
+                mensaje: this.mensajeError(error),
+                alReintentar: () => this.cargarRecetas(seleccion),
+            });
+            return;
+        }
+
+        if (this.destruido || token !== this.peticionActual) return;
+        this.contenedorRecetas.textContent = '';
+
+        const total = meals.length;
+        const conteo = document.createElement('p');
+        conteo.className = 'explorar__conteo';
+        conteo.textContent = `${total} receta(s)`;
+        this.contenedorRecetas.appendChild(conteo);
+
+        if (!total) {
+            new EstadoCarga(this.contenedorRecetas, {
+                tipo: 'lista',
+                estado: 'vacio',
+                mensaje: 'No hay recetas en esta selección.',
+            });
+            return;
+        }
+
+        const resumenes = meals.map((meal) => normalizarResumen(meal));
+        const totalPaginas = Math.ceil(resumenes.length / RESULTADOS_POR_PAGINA);
+        if (this.estado.pagina > totalPaginas) this.estado.pagina = totalPaginas;
+        if (this.estado.pagina < 1) this.estado.pagina = 1;
+
+        const inicio = (this.estado.pagina - 1) * RESULTADOS_POR_PAGINA;
+        const idsPagina = resumenes.slice(inicio, inicio + RESULTADOS_POR_PAGINA);
+
+        const cuadricula = document.createElement('div');
+        cuadricula.className = 'cuadricula cuadricula--recetas';
+        this.contenedorRecetas.appendChild(cuadricula);
+
+        // Detalle de la pagina visible en paralelo.
+        const completas = await cargarRecetasCompletas(idsPagina.map((r) => r.id));
+        if (this.destruido || token !== this.peticionActual) return;
+
+        this.tarjetas.forEach((tarjeta) => tarjeta.destruir());
+        this.tarjetas = [];
+
+        idsPagina.forEach((resumen) => {
+            const receta = completas.get(resumen.id);
+            const celda = document.createElement('div');
+            cuadricula.appendChild(celda);
+
+            const tarjeta = new TarjetaReceta(celda, {
+                receta: receta || resumen,
+                incompleta: !receta,
+                alReintentar: () => this.cargarRecetas(seleccion),
+            });
+            this.tarjetas.push(tarjeta);
+        });
+
+        const contenedorPaginador = document.createElement('div');
+        this.contenedorRecetas.appendChild(contenedorPaginador);
+
+        this.paginador = new Paginador(contenedorPaginador, {
+            paginaActual: this.estado.pagina,
+            totalPaginas: totalPaginas,
+            totalResultados: total,
+            alCambiarPagina: (pagina) => {
+                this.estado.pagina = pagina;
+                this.cargarRecetas(seleccion);
+            },
+        });
+    }
+
+    mensajeError(error) {
+        return mensajeErrorApi(error, 'No se pudo cargar la información. Intenta de nuevo.');
+    }
+
+    destruir() {
+        this.destruido = true;
+        this.peticionActual++;
+        if (this.onClick) {
+            this.contenedor.removeEventListener('click', this.onClick);
+            this.onClick = null;
+        }
+        if (this.paginador) this.paginador.destruir();
+        this.estadoCargaRecetas?.destruir();
+        this.tarjetas.forEach((tarjeta) => tarjeta.destruir());
+        this.tarjetas = [];
+        if (this.elemento) {
+            this.elemento.remove();
+            this.elemento = null;
+        }
+    }
+}
+

@@ -7,8 +7,8 @@ class PasosPreparacion {
     }
 
     crearElemento() {
-        const lista = document.createElement('ol'); // Cambiado a 'ol' para una lista ordenada
-        lista.className = 'pasos-preparacion'; // Cambiado a 'ol' para una lista ordenada
+         const lista = document.createElement('ol'); 
+         lista.className = 'pasos-preparacion';
 
         this.pasos.forEach((paso) => {
             const item = document.createElement('li'); 

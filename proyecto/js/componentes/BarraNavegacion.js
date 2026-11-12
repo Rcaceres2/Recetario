@@ -1,4 +1,4 @@
-export class BarraNavegacion {
+class BarraNavegacion {
   constructor(contenedor, props = {}) {
     this.contenedor = contenedor;
     this.estado = {
@@ -17,6 +17,11 @@ export class BarraNavegacion {
     this.enlaces.forEach((enlace) => {
       const activo = enlace.dataset.vista === this.estado.vistaActiva;
       enlace.classList.toggle('barra-nav__enlace--activo', activo);
+      if (activo) {
+        enlace.setAttribute('aria-current', 'page');
+      } else {
+        enlace.removeAttribute('aria-current');
+      }
     });
 
     if (this.badge) {
@@ -26,7 +31,8 @@ export class BarraNavegacion {
 
   configurarEventos() {
     this.onClick = (evento) => {
-      const enlace = evento.target.closest('a[data-vista]');
+      const destino = evento.target;
+      const enlace = destino instanceof Element ? destino.closest('a[data-vista]') : null;
       if (!enlace) return;
       evento.preventDefault();
 

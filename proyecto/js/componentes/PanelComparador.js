@@ -126,3 +126,146 @@ class PanelComparador {
         };
         this.inputBuscador.addEventListener('input', this.onEntrada);
     }
+
+    programarBusqueda(texto) {
+        if (this.temporizador) clearTimeout(this.temporizador);
+
+        if (texto.length < 2) {
+            this.cancelarBusqueda();
+            this.mostrarResultados([]);
+            return;
+        }
+
+        this.temporizador = setTimeout(() => {
+            this.buscar(texto);
+        }, 400);
+    }
+
+    cancelarBusqueda() {
+        if (this.temporizador) {
+            clearTimeout(this.temporizador);
+            this.temporizador = null;
+        }
+        if (this.controladorAbort) {
+            this.controladorAbort.abort();
+            this.controladorAbort = null;
+        }
+    }
+
+    async buscar(texto) {
+        this.cancelarPeticionAnterior();
+        this.controladorAbort = new AbortController();
+
+        try {
+            const data = await api.buscarPorNombre(texto, { signal: this.controladorAbort.signal });
+            const encontradas = (data?.meals || []).map((meal) => normalizarResumen(meal));
+            this.mostrarResultados(encontradas);
+        } catch (error) {
+            // Una peticion cancelada no se informa como error.
+            if (error?.tipo === TIPOS_ERROR.ABORT || error?.name === 'AbortError') return;
+            this.mostrarError('No se pudo consultar la api. Intenta de nuevo.');
+        }
+    }
+
+    cancelarPeticionAnterior() {
+        if (this.controladorAbort) {
+            this.controladorAbort.abort();
+            this.controladorAbort = null;
+        }
+    }
+
+    mostrarResultados(recetas) {
+        this.resultados = recetas;
+        this.contenedorResultados.textContent = '';
+        this.botonesElegir = [];
+
+        if (!recetas.length) return;
+
+        recetas.slice(0, 8).forEach((receta) => {
+            const item = document.createElement('div');
+            item.className = 'panel-comparador__resultado';
+
+            const nombre = document.createElement('span');
+            nombre.className = 'panel-comparador__resultado-nombre';
+            nombre.textContent = receta.nombre;
+            item.appendChild(nombre);
+
+            const btnElegir = document.createElement('button');
+            btnElegir.type = 'button';
+            btnElegir.className = 'btn-secundario';
+            btnElegir.textContent = 'Elegir';
+            btnElegir.dataset.id = receta.id;
+            this.botonesElegir.push(btnElegir);
+            item.appendChild(btnElegir);
+
+            this.contenedorResultados.appendChild(item);
+        });
+
+        this.configurarEventosResultado();
+    }
+
+    // Un solo listener para todos los botones "Elegir" de los resultados.
+    configurarEventosResultado() {
+        this.onElegir = (evento) => {
+            const id = evento.target.dataset.id;
+            const receta = this.resultados.find((r) => r.id === id);
+            if (receta) this.elegir(receta);
+        };
+        this.botonesElegir.forEach((boton) => boton.addEventListener('click', this.onElegir));
+    }
+
+    elegir(resumen) {
+        const yaEsta = this.idsOcupados.includes(resumen.id);
+        if (yaEsta) {
+            this.mostrarError('Esa receta ya está cargada en el comparador.');
+            return;
+        }
+
+        this.mostrarError('');
+        this.notificar('agregarAlComparador', { panel: this.panel, id: resumen.id });
+    }
+
+    mostrarError(mensaje) {
+        if (this.contenedorError) this.contenedorError.textContent = mensaje || '';
+    }
+
+    notificar(nombre, detalle) {
+        this.contenedor.dispatchEvent(
+            new CustomEvent(nombre, { bubbles: true, detail: detalle })
+        );
+    }
+
+    renderizar() {
+        this.contenedor.textContent = '';
+        this.elemento = this.crearElemento();
+        this.contenedor.appendChild(this.elemento);
+        this.configurarEventos();
+    }
+
+    setReceta(receta) {
+        this.receta = receta;
+        this.renderizar();
+    }
+
+    destruir() {
+        this.cancelarBusqueda();
+        if (this.btnVaciar && this.onVaciar) {
+            this.btnVaciar.removeEventListener('click', this.onVaciar);
+            this.onVaciar = null;
+        }
+        if (this.inputBuscador && this.onEntrada) {
+            this.inputBuscador.removeEventListener('input', this.onEntrada);
+            this.onEntrada = null;
+        }
+        if (this.onElegir) {
+            this.botonesElegir.forEach((boton) => boton.removeEventListener('click', this.onElegir));
+            this.onElegir = null;
+        }
+        this.botonesElegir = [];
+        if (this.elemento) {
+            this.elemento.remove();
+            this.elemento = null;
+        }
+    }
+}
+

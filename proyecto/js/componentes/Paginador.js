@@ -92,3 +92,4 @@ class Paginador {
             this.elemento = null;
         }
     }
+}

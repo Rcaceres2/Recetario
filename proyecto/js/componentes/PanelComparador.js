@@ -161,7 +161,6 @@ class PanelComparador {
             const encontradas = (data?.meals || []).map((meal) => normalizarResumen(meal));
             this.mostrarResultados(encontradas);
         } catch (error) {
-            // Una peticion cancelada no se informa como error.
             if (error?.tipo === TIPOS_ERROR.ABORT || error?.name === 'AbortError') return;
             this.mostrarError('No se pudo consultar la api. Intenta de nuevo.');
         }
@@ -204,7 +203,6 @@ class PanelComparador {
         this.configurarEventosResultado();
     }
 
-    // Un solo listener para todos los botones "Elegir" de los resultados.
     configurarEventosResultado() {
         this.onElegir = (evento) => {
             const id = evento.target.dataset.id;

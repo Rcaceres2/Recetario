@@ -135,3 +135,21 @@ La paleta parte de los colores característicos de *Cooking Mama* (rosados, marr
 * **Tratamiento fotográfico y respaldo SVG:** Imágenes con ajuste `object-fit: cover` en tarjetas (`160px` / `120px`) y `object-fit: contain` en miniaturas de ingredientes (`36px × 36px`), aplicando carga diferida (`loading="lazy"`) y un respaldo vectorial (`SVG`) integrado en tonos crema/terracota cuando falla la carga de un recurso externo.
 * **Accesibilidad:** Indicadores de foco visibles (`outline: 3px solid var(--cooking-rosa)`) y soporte para `@media (prefers-reduced-motion: reduce)` que desactiva animaciones si el usuario lo prefiere.
 
+## Capturas de Pantalla
+
+### Inicio
+![Vista de Inicio](assets/captura-inicio.png)
+
+### Explorar
+![Vista de Explorar](assets/captura-explorar.png)
+
+### Detalle de Receta
+![Vista de Detalle](assets/captura-detalle.png)
+
+### Categorías y Orígenes
+![Vista de Categorías](assets/captura-categorias.png)
+![Vista de Orígenes](assets/captura-origenes.png)
+
+### Comparador
+![Vista del Comparador](assets/captura-comparador.png)
+

@@ -611,7 +611,6 @@ body {
     align-self: flex-start;
 }
 
-/* Lista de ingredientes */
 .lista-ingredientes {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -638,6 +637,8 @@ body {
     border-radius: 6px;
     background-color: #fff;
 }
+
+.lista-ingredientes__imagen--alternativa {
     opacity: 0.8;
     padding: 4px;
 }
@@ -948,11 +949,11 @@ body {
     .detalle {
         grid-template-columns: 1fr;
     }
+}
 
     .comparador__paneles {
         grid-template-columns: 1fr;
     }
-}
 
 @media (max-width: 640px) {
     #app-main {

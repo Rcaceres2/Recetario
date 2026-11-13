@@ -183,3 +183,125 @@ class VistaDetalle {
         this.contenedorDetalle.appendChild(cuerpo);
         this.configurarEventos();
     }
+    async cargarRelacionadas() {
+        const token = ++this.peticionActual;
+
+        this.contenedorRelacionadas.textContent = '';
+        const titulo = document.createElement('h2');
+        titulo.textContent = 'Recetas relacionadas';
+        this.contenedorRelacionadas.appendChild(titulo);
+
+        const [porCategoria, porOrigen] = await Promise.allSettled([
+            this.receta.categoria ? api.filtrarPorCategoria(this.receta.categoria) : Promise.resolve(null),
+            this.receta.origen ? api.filtrarPorOrigen(this.receta.origen) : Promise.resolve(null),
+        ]);
+        if (this.destruido || token !== this.peticionActual) return;
+
+        const seccionCategoria = document.createElement('div');
+        seccionCategoria.className = 'relacionadas__grupo';
+        this.contenedorRelacionadas.appendChild(seccionCategoria);
+
+        const seccionOrigen = document.createElement('div');
+        seccionOrigen.className = 'relacionadas__grupo';
+        this.contenedorRelacionadas.appendChild(seccionOrigen);
+
+        if (porCategoria.status === 'fulfilled' && porCategoria.value) {
+            const ids = this.seleccionar(porCategoria.value?.meals || []);
+            await this.pintarGrupo(seccionCategoria, `De la categoría ${this.receta.categoria}`, ids, token);
+        } else {
+            this.pintarErrorGrupo(seccionCategoria, 'No se pudieron cargar las recetas de la categoría.');
+        }
+
+        if (porOrigen.status === 'fulfilled' && porOrigen.value) {
+            const ids = this.seleccionar(porOrigen.value?.meals || []);
+            await this.pintarGrupo(seccionOrigen, `Del origen ${this.receta.origen}`, ids, token);
+        } else {
+            this.pintarErrorGrupo(seccionOrigen, 'No se pudieron cargar las recetas del origen.');
+        }
+    }
+
+    seleccionar(meals) {
+        return meals
+            .filter((meal) => meal.idMeal !== this.id)
+            .slice(0, 6)
+            .map((meal) => normalizarResumen(meal));
+    }
+
+    async pintarGrupo(contenedor, titulo, resumenes, token) {
+        contenedor.textContent = '';
+
+        const encabezado = document.createElement('h3');
+        encabezado.className = 'relacionadas__titulo';
+        encabezado.textContent = titulo;
+        contenedor.appendChild(encabezado);
+
+        if (!resumenes.length) {
+            const vacio = document.createElement('p');
+            vacio.className = 'relacionadas__vacio';
+            vacio.textContent = 'No hay recetas relacionadas.';
+            contenedor.appendChild(vacio);
+            return;
+        }
+
+        const cuadricula = document.createElement('div');
+        cuadricula.className = 'cuadricula cuadricula--recetas';
+        contenedor.appendChild(cuadricula);
+
+        const completas = await cargarRecetasCompletas(resumenes.map((r) => r.id));
+        if (this.destruido || token !== this.peticionActual) return;
+
+        resumenes.forEach((resumen) => {
+            const receta = completas.get(resumen.id);
+            const celda = document.createElement('div');
+            cuadricula.appendChild(celda);
+
+            const tarjeta = new TarjetaReceta(celda, {
+                receta: receta || resumen,
+                incompleta: !receta,
+                alReintentar: () => this.cargarRelacionadas(),
+            });
+            this.tarjetas.push(tarjeta);
+        });
+    }
+
+    pintarErrorGrupo(contenedor, mensaje) {
+        contenedor.textContent = '';
+        new EstadoCarga(contenedor, {
+            tipo: 'tarjetas',
+            estado: 'error',
+            mensaje: mensaje,
+            alReintentar: () => this.cargarRelacionadas(),
+        });
+    }
+
+    mensajeError(error) {
+        return mensajeErrorApi(error, 'No se pudo cargar la receta. Intenta de nuevo.');
+    }
+
+    notificar(nombre, detalle) {
+        this.contenedor.dispatchEvent(
+            new CustomEvent(nombre, { bubbles: true, detail: detalle })
+        );
+    }
+
+    destruir() {
+        this.destruido = true;
+        this.peticionActual++;
+        if (this.btnVolver && this.onVolver) {
+            this.btnVolver.removeEventListener('click', this.onVolver);
+        }
+        if (this.btnComparar && this.onComparar) {
+            this.btnComparar.removeEventListener('click', this.onComparar);
+        }
+        this.onVolver = null;
+        this.onComparar = null;
+        if (this.listaIngredientes) this.listaIngredientes.destruir();
+        if (this.pasosPreparacion) this.pasosPreparacion.destruir();
+        this.tarjetas.forEach((tarjeta) => tarjeta.destruir());
+        this.tarjetas = [];
+        if (this.elemento) {
+            this.elemento.remove();
+            this.elemento = null;
+        }
+    }
+}

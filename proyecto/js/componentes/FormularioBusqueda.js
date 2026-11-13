@@ -127,3 +127,136 @@ class FormularioBusqueda {
 
         return campo;
     }
+
+    crearSelector(nombre, etiqueta, opciones, valor) {
+        const campo = document.createElement('div');
+        campo.className = 'campo';
+
+        const id = `campo-${nombre}`;
+        campo.appendChild(this.crearEtiqueta(etiqueta, id));
+
+        const select = document.createElement('select');
+        select.id = id;
+        select.name = nombre;
+        select.className = 'campo__control';
+
+        const vacio = document.createElement('option');
+        vacio.value = '';
+        vacio.textContent = 'Todos';
+        select.appendChild(vacio);
+
+        opciones.forEach((opcion) => {
+            const elemento = document.createElement('option');
+            elemento.value = opcion.nombre;
+            elemento.textContent = opcion.nombre;
+            if (opcion.nombre === valor) elemento.selected = true;
+            select.appendChild(elemento);
+        });
+
+        campo.appendChild(select);
+
+        const error = document.createElement('p');
+        error.className = 'campo__error';
+        error.id = `error-${nombre}`;
+        campo.appendChild(error);
+
+        return campo;
+    }
+
+    configurarEventos() {
+        this.onSubmit = (evento) => {
+            evento.preventDefault();
+            this.buscar();
+        };
+        this.onLimpiar = () => {
+            this.mostrarError('');
+            if (this.alLimpiar) this.alLimpiar();
+        };
+
+        this.formulario.addEventListener('submit', this.onSubmit);
+        this.btnLimpiar.addEventListener('click', this.onLimpiar);
+    }
+
+    leerValores() {
+        this.valores = {
+            nombre: this.contenedor.querySelector('#campo-nombre').value.trim(),
+            categoria: this.contenedor.querySelector('#campo-categoria').value,
+            origen: this.contenedor.querySelector('#campo-origen').value,
+            ingrediente: this.contenedor.querySelector('#campo-ingrediente').value.trim(),
+        };
+        return this.valores;
+    }
+
+    validar() {
+        const valores = this.leerValores();
+
+        if (valores.nombre && valores.nombre.length < 2) {
+            return { valido: false, campo: 'nombre', mensaje: 'El nombre debe tener al menos 2 caracteres.' };
+        }
+
+        if (valores.ingrediente && valores.ingrediente.length < 2) {
+            return { valido: false, campo: 'ingrediente', mensaje: 'El ingrediente debe tener al menos 2 caracteres.' };
+        }
+
+        const hayCriterio = valores.nombre || valores.categoria || valores.origen || valores.ingrediente;
+        if (!hayCriterio) {
+            return { valido: false, campo: 'nombre', mensaje: 'Aplica al menos un criterio de búsqueda.' };
+        }
+
+        return { valido: true };
+    }
+
+    mostrarError(mensaje, campo = null) {
+        const general = this.contenedor.querySelector('#error-busqueda');
+        if (general) general.textContent = mensaje || '';
+
+        ['nombre', 'categoria', 'origen', 'ingrediente'].forEach((nombre) => {
+            const destino = this.contenedor.querySelector(`#error-${nombre}`);
+            if (destino) destino.textContent = '';
+        });
+
+        if (campo) {
+            const destino = this.contenedor.querySelector(`#error-${campo}`);
+            if (destino) destino.textContent = mensaje;
+        }
+    }
+
+    buscar() {
+        const validacion = this.validar();
+        if (!validacion.valido) {
+            this.mostrarError(validacion.mensaje, validacion.campo);
+            return;
+        }
+
+        this.mostrarError('');
+        if (this.alBuscar) this.alBuscar(this.leerValores());
+    }
+
+    renderizar() {
+        this.contenedor.textContent = '';
+        this.elemento = this.crearElemento();
+        this.contenedor.appendChild(this.elemento);
+        this.configurarEventos();
+    }
+
+    setValores(valores) {
+        this.valores = { ...this.valores, ...valores };
+        this.renderizar();
+    }
+
+    destruir() {
+        if (this.formulario && this.onSubmit) {
+            this.formulario.removeEventListener('submit', this.onSubmit);
+        }
+        if (this.btnLimpiar && this.onLimpiar) {
+            this.btnLimpiar.removeEventListener('click', this.onLimpiar);
+        }
+        this.onSubmit = null;
+        this.onLimpiar = null;
+
+        if (this.elemento) {
+            this.elemento.remove();
+            this.elemento = null;
+        }
+    }
+}

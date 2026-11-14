@@ -73,15 +73,20 @@ Los scripts se cargan de forma ordenada en `index.html` respetando la jerarquía
     │   └── VistaComparador.js
     └── app.js                      # Enrutador SPA, gestión de estado global y ciclo de vida
 
+----
+
 ## Integrantes
 
-- Camila Vilora: Servicios y Vistas
-- Reynaldo Caceres: Vistas y Componentes
-- Mariel Sanchez: Componentes, CSS e Index
+- Camila Viloria: Servicios y Vistas
+- Reynaldo Cáceres: Vistas y Componentes
+- Mariel Sánchez: Componentes, CSS e Index
 
-## Documentación de Pseudocomponentes, eventos emitidos
+---
+
+## Documentación de Pseudocomponentes y Eventos
 
 | Componente | Responsabilidad Principal | Eventos Emitidos (`CustomEvent`) | Callbacks (`props`) |
+| :--- | :--- | :--- | :--- |
 | **`BarraNavegacion`** | Gestión visual de la vista activa y contador del comparador. | `cambiarVista` | — |
 | **`EstadoCarga`** | Retroalimentación de estados asíncronos (esqueletos, mensajes y error). | — | `alReintentar` |
 | **`FormularioBusqueda`** | Renderizado y validación del formulario de filtrado de recetas. | — | `alBuscar`, `alLimpiar` |
@@ -93,26 +98,33 @@ Los scripts se cargan de forma ordenada en `index.html` respetando la jerarquía
 | **`TarjetaReceta`** | Vista resumen de una receta con acciones rápidas y estado incompleto. | `abrirDetalle`, `agregarComparador` | `alReintentar` |
 
 ---
-## Uso de promesas
+
+## Uso de Promesas
 
 La aplicación combina `Promise.all` y `Promise.allSettled` según la dependencia entre las peticiones asíncronas:
 
-### `Promise.all` 
-* **`VistaExplorar.js` → `buscar(criterios)`:** Ejecuta en paralelo los filtros activos del formulario (nombre, categoría, origen e ingrediente). Se utiliza `Promise.all` porque la búsqueda realiza una intersección de resultados; si falla una sola petición, no es posible calcular una coincidencia exacta y se muestra un error general.
+### `Promise.all`
+
+- **`VistaExplorar.js` → `buscar(criterios)`:** Ejecuta en paralelo los filtros activos del formulario (nombre, categoría, origen e ingrediente). Se utiliza `Promise.all` porque la búsqueda realiza una intersección de resultados; si falla una sola petición, no es posible calcular una coincidencia exacta y se muestra un error general.
 
 ### `Promise.allSettled` (Tolerancia a fallos independientes)
-* **`VistaCategoriasOrigenes.js` → `cargarListas()`:** Carga simultáneamente categorías y orígenes. Si una lista falla, la otra pestaña sigue funcionando con normalidad.
-* **`VistaDetalle.js` `cargarRelacionadas()`:** Obtiene recetas relacionadas por categoría y por origen en paralelo, renderizando cada bloque de forma independiente aunque uno de los dos falle.
-* **`VistaExplorar.js`  `cargarListas()`:** Carga las listas para los selectores y el autocompletado del formulario (categorías, orígenes e ingredientes), permitiendo usar el buscador aunque alguna lista no cargue.
-* **`VistaInicio.js`  `cargar()`:** Solicita la receta destacada aleatoria y la cuadrícula de categorías al mismo tiempo, aislando cualquier error de red a su propia sección.
 
+- **`VistaCategoriasOrigenes.js` → `cargarListas()`:** Carga simultáneamente categorías y orígenes. Si una lista falla, la otra pestaña sigue funcionando con normalidad.
+- **`VistaDetalle.js` → `cargarRelacionadas()`:** Obtiene recetas relacionadas por categoría y por origen en paralelo, renderizando cada bloque de forma independiente aunque uno de los dos falle.
+- **`VistaExplorar.js` → `cargarListas()`:** Carga las listas para los selectores y el autocompletado del formulario (categorías, orígenes e ingredientes), permitiendo usar el buscador aunque alguna lista no cargue.
+- **`VistaInicio.js` → `cargar()`:** Solicita la receta destacada aleatoria y la cuadrícula de categorías al mismo tiempo, aislando cualquier error de red a su propia sección.
+
+---
 
 ## Referencias de Inspiración
+
 La identidad visual y la experiencia de usuario están inspiradas directamente en la franquicia de videojuegos **Cooking Mama**:
-* **Estética cálida y acogedora:** Uso de fondos en tonos crema/pastel, tarjetas con bordes redondeados (`12px` y `8px`), botones tipo píldora (`999px`) y sombras suaves que transmiten la calidez de un recetario ilustrado.
-* **Jerarquía visual clara:** Separación marcada entre bloques de información, etiquetas tipo *badge* para el comparador y estados de carga
+
+- **Estética cálida y acogedora:** Uso de fondos en tonos crema/pastel, tarjetas con bordes redondeados (`12px` y `8px`), botones tipo píldora (`999px`) y sombras suaves que transmiten la calidez de un recetario ilustrado.
+- **Jerarquía visual clara:** Separación marcada entre bloques de información, etiquetas tipo *badge* para el comparador y estados de carga.
 
 ### Paleta de Colores
+
 La paleta parte de los colores característicos de *Cooking Mama* (rosados, marrones cálidos y tonos crema), implementada mediante variables CSS (`:root`) adaptadas para garantizar un contraste legible:
 
 | Variable CSS / Referencia | Color | HEX | RGB | Uso en la interfaz |
@@ -126,30 +138,39 @@ La paleta parte de los colores característicos de *Cooking Mama* (rosados, marr
 | `--cooking-texto` / `--cooking-texto-suave` | **Marrón Oscuro / Gris Cálido** | `#3f2d1e` / `#7a6353` | `rgb(63, 45, 30)` | Texto principal de alta legibilidad y metadatos o descripciones secundarias. |
 | *Estados semánticos* | **Carmesí / Verde / Ámbar** | `#a12a43` / `#eefaf0` / `#fff6e6` | — | Mensajes de error y validación (`#a12a43`), métrica ganadora (`#eefaf0`) y fila destacada en comparación (`#fff6e6`). |
 
-## Tipografías
-**Familia tipográfica:** `'Segoe UI', Tahoma, Geneva, Verdana, sans-serif` (pila *sans-serif* nativa de alta legibilidad y renderizado rápido sin dependencias externas).
-**Escala y pesos:** Títulos destacados en negrita (`700`) con ligero espaciado de letras (`0.02em`) en el logotipo, botones y etiquetas en seminegrita (`600`), y cuerpo de texto con interlineado cómodo (`line-height: 1.5`) para facilitar la lectura de ingredientes y pasos.
+### Tipografías
 
-## Criterio de Iconografía e Imágenes
-* **Minimalismo con glifos Unicode:** Uso de símbolos tipográficos universales (`←`, `⇄`) en botones de navegación e intercambio para mantener la interfaz ligera y evitar librerías de iconos externas.
-* **Tratamiento fotográfico y respaldo SVG:** Imágenes con ajuste `object-fit: cover` en tarjetas (`160px` / `120px`) y `object-fit: contain` en miniaturas de ingredientes (`36px × 36px`), aplicando carga diferida (`loading="lazy"`) y un respaldo vectorial (`SVG`) integrado en tonos crema/terracota cuando falla la carga de un recurso externo.
-* **Accesibilidad:** Indicadores de foco visibles (`outline: 3px solid var(--cooking-rosa)`) y soporte para `@media (prefers-reduced-motion: reduce)` que desactiva animaciones si el usuario lo prefiere.
+- **Familia tipográfica:** `'Segoe UI', Tahoma, Geneva, Verdana, sans-serif` (pila *sans-serif* nativa de alta legibilidad y renderizado rápido sin dependencias externas).
+- **Escala y pesos:** Títulos destacados en negrita (`700`) con ligero espaciado de letras (`0.02em`) en el logotipo, botones y etiquetas en seminegrita (`600`), y cuerpo de texto con interlineado cómodo (`line-height: 1.5`) para facilitar la lectura de ingredientes y pasos.
+
+### Criterio de Iconografía e Imágenes
+
+- **Minimalismo con glifos Unicode:** Uso de símbolos tipográficos universales (`←`, `⇄`) en botones de navegación e intercambio para mantener la interfaz ligera y evitar librerías de iconos externas.
+- **Tratamiento fotográfico y respaldo SVG:** Imágenes con ajuste `object-fit: cover` en tarjetas (`160px` / `120px`) y `object-fit: contain` en miniaturas de ingredientes (`36px × 36px`), aplicando carga diferida (`loading="lazy"`) y un respaldo vectorial (`SVG`) integrado en tonos crema/terracota cuando falla la carga de un recurso externo.
+- **Accesibilidad:** Indicadores de foco visibles (`outline: 3px solid var(--cooking-rosa)`) y soporte para `@media (prefers-reduced-motion: reduce)` que desactiva animaciones si el usuario lo prefiere.
+
+---
 
 ## Capturas de Pantalla
 
 ### Inicio
+
 ![Vista de Inicio](assets/captura-inicio.png)
 
 ### Explorar
+
 ![Vista de Explorar](assets/captura-explorar.png)
 
 ### Detalle de Receta
+
 ![Vista de Detalle](assets/captura-detalle.png)
 
 ### Categorías y Orígenes
+
 ![Vista de Categorías](assets/captura-categorias.png)
+
 ![Vista de Orígenes](assets/captura-origenes.png)
 
 ### Comparador
-![Vista del Comparador](assets/captura-comparador.png)
 
+![Vista del Comparador](assets/captura-comparador.png)
